@@ -4,35 +4,6 @@
 #include <string.h>
 #include <math.h>
 
-
-
-
-void reverse(char *bin, int left, int right) {
-    while (left < right) {
-        char temp = bin[left];
-        bin[left] = bin[right];
-        bin[right] = temp;
-        left++;
-        right--;
-    }
-}
-
-void to_binary(int n, char* bin) {
-    int index = 0;
-    if (n == 0){
-        bin[index++] = '0';
-    }
-
-    while (n > 0) {
-        int bit = n % 2;
-        bin[index++] = '0' + bit;
-        n /= 2;
-    }
-    bin[index] = '\0';
-
-	reverse(bin, 0, index-1);
-}
-
 bool power_of_two(int n){
     if(n<=0)
         return false;
@@ -40,9 +11,14 @@ bool power_of_two(int n){
 }
 
 
-void hamming_code(const char *message, int size, int r){
+char* hamming_code(const char *message, int size, int r){
     int total = size + r;
-    char code_parity[total];
+    //char code_parity[total];
+    char* code_parity = (char *)malloc((size+r)*sizeof(char));
+    if (code_parity == NULL){
+        fprintf(stderr, "Error allocating memory");
+        return;
+    }
     int j = 0;
 
     // fill positions 
@@ -59,17 +35,21 @@ void hamming_code(const char *message, int size, int r){
         int parity = 0;
 
         for (int k = 1; k<=total; k++){
-            if ((k & parity_pos) && k != parity_pos){ // check k AND parity_pos : 1 AND 1 = 1 i.e. true
-                parity ^= (code_parity[k-1] - '0'); // perform XOR
+            if ((k & parity_pos) && k != parity_pos){ // check k AND parity_pos : 1 AND 1 = 1 i.e. true and skip parity positions : 1,2,4,8...
+                parity += (code_parity[k-1] - '0'); // add values of the non-parity values that add up to the result
+                // parity ^= (code_parity[k-1] - '0'); // perform XOR on the left positions
             }
         }
+        parity %= 2; // get the modulo result
         code_parity[parity_pos - 1] = parity + '0';
     }
+
     printf("Output message:\n");
     for (int i = 0; i<total; i++){
         printf("%c", code_parity[i]);
     }
-
+    
+    return code_parity;
     
 }
 
@@ -81,6 +61,7 @@ int check_parity(int m) {
     while (pow(2, r) < m + r + 1) {
         r++;
     }
+    printf("Parity r: %d", r);
     return r;
 }
 
@@ -90,8 +71,8 @@ int check_parity(int m) {
 bool check_symbols(const char *message, int size){
     for (int i = 0; i!=size; i++){
         int val = message[i] - '0';
-        if (val != 0 || val != 1){
-            printf("Message error: %d\n", val);
+        if (val != 0 && val != 1){
+            printf("Error on message: unknown character '%c' at position %d\n", message[i], i);
             return false;
         }
     }
@@ -102,9 +83,10 @@ bool check_symbols(const char *message, int size){
 
 int main(int argc, char *argv[]){
     printf("###Hamming code encryption###\n");
-
+    printf("Enter binary : read from left to right\n");
+    printf("2^n 2^5 2^4 2^3 2^2 2^1 2^0\n");
     char *message = NULL;
-    size_t initial_size = 100;
+    size_t initial_size = 100; // message size up to 100
     int minimal_size = 4;
 
     message = (char *)malloc(initial_size * sizeof(char)); // allocate memory
@@ -130,13 +112,17 @@ int main(int argc, char *argv[]){
         free(message); 
         return 1;
     }
+
     message = temp_string;
     int size = (int)real_length;
+    if (!check_symbols(message, size)){
+        return 1;
+    }
     int r = check_parity(size);
 
-    hamming_code(message, size, r);
+    char* hamming_message = hamming_code(message, size, r);
 
-
-    free(message);
+    free(hamming_message); // free hamming_code memory
+    free(message); // free message memory
     return 0;
 }
