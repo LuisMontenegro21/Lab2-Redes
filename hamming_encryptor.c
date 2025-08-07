@@ -2,28 +2,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-//#include <math.h>
+#include <math.h>
 
 
-// check powers
-enum Powers {
-    p1 = 1,
-    p2 = 2,
-    p3 = 4,
-    p4 = 8,
-    p5 = 16,
-    p6 = 32,
-    p7 = 64,
-    p8 = 128,
-    p9 = 256,
-    p10 = 512,
-    p11 = 1024,
-    p12 = 2048
-};
 
-/*
-Auxiliary functions
-*/
+
 void reverse(char *bin, int left, int right) {
     while (left < right) {
         char temp = bin[left];
@@ -34,9 +17,11 @@ void reverse(char *bin, int left, int right) {
     }
 }
 
-char* to_binary(int n) {
+void to_binary(int n, char* bin) {
     int index = 0;
-	char* bin = (char*) malloc(32 * sizeof(char));
+    if (n == 0){
+        bin[index++] = '0';
+    }
 
     while (n > 0) {
         int bit = n % 2;
@@ -46,19 +31,58 @@ char* to_binary(int n) {
     bin[index] = '\0';
 
 	reverse(bin, 0, index-1);
-  	return bin;
 }
 
-bool hamming_code(const char *message, int size){
+bool power_of_two(int n){
+    if(n<=0)
+        return false;
+    return (n & (n-1)) == 0;
+}
 
-    for (int index = 0; index!=size; index++){
-        char* bin = to_binary(index); // returns a list of binary
-        int index_value = message[index] - '0'; // turns ascii value into 1 and 0 
-        printf("Index value: %d | Binary index: %s\n", index_value, bin);
+
+void hamming_code(const char *message, int size, int r){
+    int total = size + r;
+    char code_parity[total];
+    int j = 0;
+
+    // fill positions 
+    for (int i=1;i<=total; i++){
+        if (power_of_two(i)){
+            code_parity[i-1] = '0';
+        } else {
+            code_parity[i-1] = message[j++];
+        }
     }
-    return true;
+
+    for (int i = 0; i < r; i++){
+        int parity_pos = 1 << i; // move to the least significant bit to the most to check for parity
+        int parity = 0;
+
+        for (int k = 1; k<=total; k++){
+            if ((k & parity_pos) && k != parity_pos){ // check k AND parity_pos : 1 AND 1 = 1 i.e. true
+                parity ^= (code_parity[k-1] - '0'); // perform XOR
+            }
+        }
+        code_parity[parity_pos - 1] = parity + '0';
+    }
+    printf("Output message:\n");
+    for (int i = 0; i<total; i++){
+        printf("%c", code_parity[i]);
+    }
+
+    
 }
 
+/*
+    Check if parity is correct for message
+*/
+int check_parity(int m) {
+    int r = 0;
+    while (pow(2, r) < m + r + 1) {
+        r++;
+    }
+    return r;
+}
 
 /*
  Checks that all symbols are 0 and 1
@@ -108,15 +132,10 @@ int main(int argc, char *argv[]){
     }
     message = temp_string;
     int size = (int)real_length;
-    // check data integrity
-    // if(check_symbols(message, size) == false){
-    //     printf("Unknown symbol found on message: only 0 and 1 accepted");
-    //     return 1;
-    // }
-    // perform hamming code
-    if(hamming_code(message, size)){
-        printf("Message has no errors");
-    } 
+    int r = check_parity(size);
+
+    hamming_code(message, size, r);
+
 
     free(message);
     return 0;
