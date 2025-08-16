@@ -40,7 +40,7 @@ char* hamming_code(const char *message, int size, int r){
                 // parity ^= (code_parity[k-1] - '0'); // perform XOR on the left positions
             }
         }
-        parity %= 2; // get the modulo result
+        parity %= 2;
         code_parity[parity_pos - 1] = parity + '0';
     }
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]){
     printf("2^n 2^5 2^4 2^3 2^2 2^1 2^0\n");
     char *message = NULL;
     size_t initial_size = 100; // message size up to 100
-    int minimal_size = 4;
+    const int minimal_size = 4;
 
     message = (char *)malloc(initial_size * sizeof(char)); // allocate memory
     if (message == NULL){
