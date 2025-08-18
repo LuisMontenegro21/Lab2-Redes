@@ -2,15 +2,17 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include "includes.h"
 
-static void xor_at(char *buf, size_t pos, const char *poly, size_t size_poly) {
+inline static void xor_at(char *buf, size_t pos, const char *poly, size_t size_poly) {
     for (size_t j = 0; j < size_poly; ++j) 
         // performs bitwise XOR , yields 0 or 1 and then transform back to ascii by adding '0'
         buf[pos + j] = ((buf[pos+j] - '0') ^ (poly[j] - '0')) + '0';
 }
 
-char* crc32(const char *message, size_t message_len,const char *poly){
-    const size_t size_poly = strlen(poly);
+char* crc32(const char *message, size_t message_len){
+    const char *characteristic_poly = "100000100110000010001110110110111";
+    const size_t size_poly = strlen(characteristic_poly);
     const size_t pad = size_poly - 1;
     const size_t size_dividend = message_len + pad;
 
@@ -25,7 +27,7 @@ char* crc32(const char *message, size_t message_len,const char *poly){
     dividend[size_dividend] = '\0'; // set end
     
     for (size_t i = 0; i + size_poly <= size_dividend; ++i) 
-        if (dividend[i] == '1') xor_at(dividend, i, poly, size_poly);
+        if (dividend[i] == '1') xor_at(dividend, i, characteristic_poly, size_poly);
     
     char *rem = (char*)malloc(pad+1);
     if (!rem) {free(dividend);return NULL;}
@@ -49,11 +51,6 @@ char* crc32(const char *message, size_t message_len,const char *poly){
 
 int main(){
     printf("###CRC-32 encryption###\n");
-    printf("Enter binary : read from left to right\n");
-    printf("2^n 2^5 2^4 2^3 2^2 2^1 2^0\n");
-
-    const char *characteristic_poly = "100000100110000010001110110110111";
-
 
     char *message = NULL;
     const int minimal_message_size = 4;
@@ -84,8 +81,8 @@ int main(){
         return 1;
     }
     //  final message
-    char *final_message = crc32(message, real_length, characteristic_poly);
-    printf("Encoded: %s\n", final_message);
+    char *final_message = crc32(message, real_length);
+    printf("CRC32 encoded: %s\n", final_message);
     
     free(message);
     free(final_message);

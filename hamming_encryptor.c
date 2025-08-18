@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <math.h>
+#include "includes.h"
 
 bool power_of_two(int n){
     if(n<=0)
@@ -17,7 +18,7 @@ char* hamming_code(const char *message, int size, int r){
     char* code_parity = (char *)malloc((size+r)*sizeof(char));
     if (code_parity == NULL){
         fprintf(stderr, "Error allocating memory");
-        return;
+        return NULL;
     }
     int j = 0;
 
@@ -43,14 +44,8 @@ char* hamming_code(const char *message, int size, int r){
         parity %= 2;
         code_parity[parity_pos - 1] = parity + '0';
     }
-
-    printf("Output message:\n");
-    for (int i = 0; i<total; i++){
-        printf("%c", code_parity[i]);
-    }
     
-    return code_parity;
-    
+    return code_parity;  
 }
 
 /*
@@ -61,30 +56,15 @@ int check_parity(int m) {
     while (pow(2, r) < m + r + 1) {
         r++;
     }
-    printf("Parity r: %d", r);
+
     return r;
 }
 
-/*
- Checks that all symbols are 0 and 1
-*/
-bool check_symbols(const char *message, int size){
-    for (int i = 0; i!=size; i++){
-        int val = message[i] - '0';
-        if (val != 0 && val != 1){
-            printf("Error on message: unknown character '%c' at position %d\n", message[i], i);
-            return false;
-        }
-    }
-    return true;
-}
 
 
 
 int main(int argc, char *argv[]){
     printf("###Hamming code encryption###\n");
-    printf("Enter binary : read from left to right\n");
-    printf("2^n 2^5 2^4 2^3 2^2 2^1 2^0\n");
     char *message = NULL;
     size_t initial_size = 100; // message size up to 100
     const int minimal_size = 4;
@@ -118,11 +98,13 @@ int main(int argc, char *argv[]){
     if (!check_symbols(message, size)){
         return 1;
     }
-    int r = check_parity(size);
 
+    int r = check_parity(size); // check optimal parity size
     char* hamming_message = hamming_code(message, size, r);
+    printf("Hamming encoding: %s\t", hamming_message);
 
-    free(hamming_message); // free hamming_code memory
     free(message); // free message memory
+    free(hamming_message); // free hamming_code memory
+
     return 0;
 }
