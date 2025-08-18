@@ -35,7 +35,7 @@ char* crc32(const char *message, size_t message_len,const char *poly){
 
     // concatenate original message plus remainder
     size_t rem_len = strlen(rem);
-    char* output = (char*)malloc(message_len + rem_len);
+    char* output = (char*)malloc(message_len + rem_len + 1);
     if (!output) {free(rem); return NULL;}
     // copy into output the message
     memcpy(output, message, message_len); 
