@@ -2,106 +2,127 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <math.h>
 
-static bool power_of_two(int n){
-    if(n <= 0) return false;
-    return (n & (n - 1)) == 0;
+bool power_of_two(int n){
+    if(n<=0)
+        return false;
+    return (n & (n-1)) == 0;
 }
 
-/* Calcula r tal que 2^r >= m + r + 1 */
-static int calc_parity_bits(int m) {
+
+char* hamming_code(const char *message, int size, int r){
+    int total = size + r;
+    //char code_parity[total];
+    char* code_parity = (char *)malloc((size+r)*sizeof(char));
+    if (code_parity == NULL){
+        fprintf(stderr, "Error allocating memory");
+        return;
+    }
+    int j = 0;
+
+    // fill positions 
+    for (int i=1;i<=total; i++){
+        if (power_of_two(i)){
+            code_parity[i-1] = '0';
+        } else {
+            code_parity[i-1] = message[j++];
+        }
+    }
+
+    for (int i = 0; i < r; i++){
+        int parity_pos = 1 << i; // move to the least significant bit to the most to check for parity
+        int parity = 0;
+
+        for (int k = 1; k<=total; k++){
+            if ((k & parity_pos) && k != parity_pos){ // check k AND parity_pos : 1 AND 1 = 1 i.e. true and skip parity positions : 1,2,4,8...
+                parity += (code_parity[k-1] - '0'); // add values of the non-parity values that add up to the result
+                // parity ^= (code_parity[k-1] - '0'); // perform XOR on the left positions
+            }
+        }
+        parity %= 2;
+        code_parity[parity_pos - 1] = parity + '0';
+    }
+
+    printf("Output message:\n");
+    for (int i = 0; i<total; i++){
+        printf("%c", code_parity[i]);
+    }
+    
+    return code_parity;
+    
+}
+
+/*
+    Check if parity is correct for message
+*/
+int check_parity(int m) {
     int r = 0;
-    // usar shifts para evitar pow()
-    while ((1 << r) < (m + r + 1)) {
+    while (pow(2, r) < m + r + 1) {
         r++;
     }
+    printf("Parity r: %d", r);
     return r;
 }
 
-/* Verifica que todos los símbolos sean 0/1 */
-static bool check_symbols(const char *message, int size){
-    for (int i = 0; i < size; i++){
-        if (message[i] != '0' && message[i] != '1'){
-            fprintf(stderr, "Error: caracter invalido '%c' en posicion %d\n", message[i], i);
+/*
+ Checks that all symbols are 0 and 1
+*/
+bool check_symbols(const char *message, int size){
+    for (int i = 0; i!=size; i++){
+        int val = message[i] - '0';
+        if (val != 0 && val != 1){
+            printf("Error on message: unknown character '%c' at position %d\n", message[i], i);
             return false;
         }
     }
     return true;
 }
 
-/* Genera la palabra Hamming con paridad par. Devuelve string heap-alloc (debes free()). */
-static char* hamming_code(const char *message, int size, int r){
-    int total = size + r;
 
-    char *code_parity = (char *)malloc((size_t)total + 1);
-    if (code_parity == NULL){
-        fprintf(stderr, "Error: no se pudo asignar memoria\n");
-        return NULL;
-    }
 
-    int j = 0;
-    // Colocar datos en posiciones que NO son potencia de 2; paridades quedan en '0'
-    for (int i = 1; i <= total; i++){
-        if (power_of_two(i)) {
-            code_parity[i - 1] = '0';
-        } else {
-            code_parity[i - 1] = message[j++];
-        }
-    }
-
-    // Calcular bits de paridad (paridad par)
-    for (int i = 0; i < r; i++){
-        int parity_pos = 1 << i; // 1,2,4,8,...
-        int parity = 0;
-
-        for (int k = 1; k <= total; k++){
-            if ((k & parity_pos) != 0){ // incluye su propia posicion
-                parity ^= (code_parity[k - 1] - '0');
-            }
-        }
-        // Ajustar bit de paridad para que la paridad sea PAR
-        if (parity % 2 != 0){
-            // Toggle en la posicion de paridad
-            code_parity[parity_pos - 1] = (code_parity[parity_pos - 1] == '0') ? '1' : '0';
-        }
-    }
-
-    code_parity[total] = '\0';
-    return code_parity;
-}
-
-int main(void){
-    printf("### Hamming code (emisor) ###\n");
-    printf("Ingrese el mensaje en binario (solo 0/1):\n");
-
-    char buffer[1024];
-    if (!fgets(buffer, sizeof(buffer), stdin)) {
-        fprintf(stderr, "Error al leer entrada\n");
-        return 1;
-    }
-
-    // recortar \r\n
-    size_t len = strcspn(buffer, "\r\n");
-    buffer[len] = '\0';
-
+int main(int argc, char *argv[]){
+    printf("###Hamming code encryption###\n");
+    printf("Enter binary : read from left to right\n");
+    printf("2^n 2^5 2^4 2^3 2^2 2^1 2^0\n");
+    char *message = NULL;
+    size_t initial_size = 100; // message size up to 100
     const int minimal_size = 4;
-    if ((int)len < minimal_size){
-        fprintf(stderr, "Error: longitud minima es %d, se recibio %zu\n", minimal_size, len);
+
+    message = (char *)malloc(initial_size * sizeof(char)); // allocate memory
+    if (message == NULL){
+        perror("Message is NULL");
+        return 1;
+    }
+    if (scanf("%99s", message) != 1) {
+        fprintf(stderr, "Error when reading input");
         return 1;
     }
 
-    if (!check_symbols(buffer, (int)len)){
+    size_t real_length = strlen(message); // get real size
+    // check minimal size allowed 
+    if ((int)real_length < minimal_size){
+        printf("Error: Minimal length for a code is 4: %d found\n", (int)real_length);
+        return 1;
+    }
+    // reallocate memory to fit the size
+    char *temp_string = (char *)realloc(message, (real_length + 1) * sizeof(char));
+    if (temp_string == NULL){
+        perror("Failed to realocate memory");
+        free(message); 
         return 1;
     }
 
-    int r = calc_parity_bits((int)len);
-    char *hamming_msg = hamming_code(buffer, (int)len, r);
-    if (!hamming_msg) {
+    message = temp_string;
+    int size = (int)real_length;
+    if (!check_symbols(message, size)){
         return 1;
     }
+    int r = check_parity(size);
 
-    printf("Palabra de Hamming: %s\n", hamming_msg);
+    char* hamming_message = hamming_code(message, size, r);
 
-    free(hamming_msg);
+    free(hamming_message); // free hamming_code memory
+    free(message); // free message memory
     return 0;
 }
