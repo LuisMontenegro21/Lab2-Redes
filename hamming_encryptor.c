@@ -44,7 +44,7 @@ char* hamming_code(const char *message, int size, int r){
         parity %= 2;
         code_parity[parity_pos - 1] = parity + '0';
     }
-    
+    code_parity[total] = '\0';
     return code_parity;  
 }
 
@@ -53,10 +53,9 @@ char* hamming_code(const char *message, int size, int r){
 */
 int check_parity(int m) {
     int r = 0;
-    while (pow(2, r) < m + r + 1) {
+    while (pow(2, r) < m + r + 1) 
         r++;
-    }
-
+    
     return r;
 }
 
@@ -65,43 +64,20 @@ int check_parity(int m) {
 
 int main(int argc, char *argv[]){
     printf("###Hamming code encryption###\n");
-    char *message = NULL;
-    size_t initial_size = 100; // message size up to 100
-    const int minimal_size = 4;
 
-    message = (char *)malloc(initial_size * sizeof(char)); // allocate memory
+   
+    char* message = request_message();
     if (message == NULL){
         perror("Message is NULL");
         return 1;
     }
-    if (scanf("%99s", message) != 1) {
-        fprintf(stderr, "Error when reading input");
-        return 1;
-    }
+    int real_length = strlen(message); // get real size
 
-    size_t real_length = strlen(message); // get real size
-    // check minimal size allowed 
-    if ((int)real_length < minimal_size){
-        printf("Error: Minimal length for a code is 4: %d found\n", (int)real_length);
-        return 1;
-    }
-    // reallocate memory to fit the size
-    char *temp_string = (char *)realloc(message, (real_length + 1) * sizeof(char));
-    if (temp_string == NULL){
-        perror("Failed to realocate memory");
-        free(message); 
-        return 1;
-    }
-
-    message = temp_string;
-    int size = (int)real_length;
-    if (!check_symbols(message, size)){
-        return 1;
-    }
-
-    int r = check_parity(size); // check optimal parity size
-    char* hamming_message = hamming_code(message, size, r);
+    int r = check_parity(real_length); // check optimal parity size
+    char* hamming_message = hamming_code(message, real_length, r);
     printf("Hamming encoding: %s\t", hamming_message);
+    add_noise(hamming_message);
+    printf("Hamming with errors: %s\t");
 
     free(message); // free message memory
     free(hamming_message); // free hamming_code memory

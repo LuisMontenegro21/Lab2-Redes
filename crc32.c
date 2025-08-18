@@ -51,38 +51,12 @@ char* crc32(const char *message, size_t message_len){
 
 int main(){
     printf("###CRC-32 encryption###\n");
-
-    char *message = NULL;
-    const int minimal_message_size = 4;
-    size_t initial_size = 100; // message size up to 100
-
-
-    message = (char *)malloc(initial_size * sizeof(char)); // allocate memory
-    if (message == NULL){
-        perror("Message is NULL");
-        return 1;
-    }
-    if (scanf("%99s", message) != 1) {
-        fprintf(stderr, "Error when reading input");
-        return 1;
-    }
-
+    char *message = request_message();
     size_t real_length = strlen(message); // get real size
-    // check minimal size allowed 
-    if ((int)real_length < minimal_message_size){
-        printf("Error: Minimal length for a code is 4: %d found\n", (int)real_length);
-        return 1;
-    }
-    // reallocate memory to fit the size
-    char *temp_string = (char *)realloc(message, (real_length + 1) * sizeof(char));
-    if (temp_string == NULL){
-        perror("Failed to realocate memory");
-        free(message); 
-        return 1;
-    }
-    //  final message
     char *final_message = crc32(message, real_length);
-    printf("CRC32 encoded: %s\n", final_message);
+    printf("CRC32 encoded: %s\t", final_message);
+    add_noise(final_message);
+    printf("CRC32 with errors: %s\t", final_message);
     
     free(message);
     free(final_message);
