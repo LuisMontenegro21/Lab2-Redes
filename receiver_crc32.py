@@ -16,6 +16,23 @@ def crc_check(received, poly):
     remainder = ''.join(dividend[-(m-1):])
     return remainder  # '0'*(m-1) si no hay error
 
+def verify_crc(bits: str) -> tuple[bool, str]:
+    """Verifica la trama con CRC.
+       Retorna (ok, mensaje_original)"""
+    POLY = "100000100110000010001110110110111"
+    n, m = len(bits), len(POLY)
+    dividend = list(bits)
+    for i in range(n - m + 1):
+        if dividend[i] == '1':
+            for j in range(m):
+                dividend[i + j] = str(int(dividend[i + j]) ^ int(POLY[j]))
+    remainder = ''.join(dividend[-(m-1):])
+    if set(remainder) == {'0'}:
+        msg = bits[:-(m-1)]
+        return True, msg
+    else:
+        return False, ""
+
 if __name__ == "__main__":
     POLY = "100000100110000010001110110110111"  # CRC-32 IEEE (binario)
     rx = input("Ingrese trama+CRC en binario: ").strip()
