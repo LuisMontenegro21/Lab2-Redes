@@ -66,8 +66,7 @@ void add_noise(char* message){
     srand(time(NULL));
     int msg_len = strlen(message);
     int random_index = (rand() % msg_len);
-    if ((rand()%100) == 0)
+    if ((rand() % 10) == 0)
         message[random_index] = message[random_index] == '0' ? '1' : '0';
-
 }  
     
