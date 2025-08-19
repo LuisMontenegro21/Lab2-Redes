@@ -42,9 +42,6 @@ char* request_message(){
     // char *message = malloc(n + 1);
     // if (!message) return NULL;
     // memcpy(message, buf, n + 1);
-
-
-
     return string_to_binary(message);
 }
 
@@ -69,6 +66,8 @@ void add_noise(char* message){
     srand(time(NULL));
     int msg_len = strlen(message);
     int random_index = (rand() % msg_len);
-    message[random_index] = message[random_index] == '0' ? '1' : '0';
+    if ((rand()%100) == 0)
+        message[random_index] = message[random_index] == '0' ? '1' : '0';
+
 }  
     

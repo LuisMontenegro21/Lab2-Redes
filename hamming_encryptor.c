@@ -66,18 +66,17 @@ int check_parity(int m) {
 int main(void){
     printf("###Hamming code encryption###\n");
    
-    char* message = request_message();
-    if (message == NULL){
-        perror("Message is NULL");
-        return 1;
-    }
-    int real_length = strlen(message); // get real size
-
-    int r = check_parity(real_length); // check optimal parity size
-    char* hamming_message = hamming_code(message, real_length, r);
-    printf("Hamming encoding: %s\t", hamming_message);
-    add_noise(hamming_message);
-    printf("Hamming with errors: %s\t");
+    // char* message = request_message();
+    // if (message == NULL){
+    //     perror("Message is NULL");
+    //     return 1;
+    // }
+    // int real_length = strlen(message); // get real size
+    // int r = check_parity(real_length); // check optimal parity size
+    // char* hamming_message = hamming_code(message, real_length, r);
+    // //printf("Hamming encoding: %s\t", hamming_message);
+    // add_noise(hamming_message);
+    // //printf("Hamming with errors: %s\t");
 
     if (net_client_init() != 0) {
         fprintf(stderr, "Failed to init Winsock\n");
@@ -93,14 +92,33 @@ int main(void){
         return 1;
     }
 
+    char buf[3];   
+    int N = 1000;
+    for (int i = 1; i <= N; ++i) {
+
+        snprintf(buf, sizeof buf, "%d", i);
+        char* binary = string_to_binary(buf);
+
+        int real_length = strlen(binary);
+        int r = check_parity(real_length);
+        char *hamming_message = hamming_code(binary, real_length, r);
+
+        add_noise(hamming_message);
+
+        net_client_send_line(&cli, hamming_message);
+
+        free(hamming_message); // free memory from hamming_code
+    }
+
+    //net_client_send_line(&cli, hamming_message);
     // close
-    net_client_send_line(&cli, hamming_message);
+    
     net_client_close(&cli);
     net_client_cleanup();
 
 
-    free(message); // free message memory
-    free(hamming_message); // free hamming_code memory
+    //free(message); 
+    //free(hamming_message); 
 
     return 0;
 }

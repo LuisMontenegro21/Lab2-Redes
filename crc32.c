@@ -52,12 +52,12 @@ char* crc32(const char *message, size_t message_len){
 
 int main(void){
     printf("###CRC-32 encryption###\n");
-    char *message = request_message();
-    size_t real_length = strlen(message); // get real size
-    char *final_message = crc32(message, real_length);
-    printf("CRC32 encoded: %s\t", final_message);
-    add_noise(final_message);
-    printf("CRC32 with errors: %s\t", final_message);
+    // char *message = request_message();
+    // size_t real_length = strlen(message); // get real size
+    // char *final_message = crc32(message, real_length);
+    // printf("CRC32 encoded: %s\t", final_message);
+    // add_noise(final_message);
+    // printf("CRC32 with errors: %s\t", final_message);
 
     if (net_client_init() != 0) {
         fprintf(stderr, "Failed to init Winsock\n");
@@ -74,17 +74,25 @@ int main(void){
         net_client_cleanup();
         return 1;
     }
-
-    net_client_send_line(&cli, final_message);          
-
+    char buf[32];
+    int N = 1000;
+    for (int i = 1; i<=N; ++i){
+        snprintf(buf, sizeof buf, "%d", i);
+        char* binary = string_to_binary(buf);
+        size_t real_length = strlen(binary);
+        char *final_message = crc32(binary, real_length);
+        add_noise(final_message);
+        net_client_send_line(&cli, final_message);
+        free(final_message);
+    }
 
 
     net_client_close(&cli);
     net_client_cleanup();
 
     
-    free(message);
-    free(final_message);
+    // free(message);
+    // free(final_message);
 
     return 0;
 }
