@@ -1,9 +1,12 @@
+
 #include "includes.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
+
+
 
 
 char* request_message(){
@@ -68,6 +71,4 @@ void add_noise(char* message){
     int random_index = (rand() % msg_len);
     message[random_index] = message[random_index] == '0' ? '1' : '0';
 }  
-
-
-
+    
