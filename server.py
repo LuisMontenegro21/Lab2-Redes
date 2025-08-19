@@ -65,10 +65,10 @@ def main():
                     write_log(out["len_bits"], out["outcome"], out["ascii"])
 
                     # respuesta opcional al cliente (eco)
-                    try:
-                        conn.sendall((out["resp"] + "\n").encode())
-                    except Exception:
-                        break
+                    # try:
+                    #     conn.sendall((out["resp"] + "\n").encode())
+                    # except Exception:
+                    #     break
 
 if __name__ == "__main__":
     main()

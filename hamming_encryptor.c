@@ -92,7 +92,7 @@ int main(void){
         return 1;
     }
 
-    char buf[3];   
+    char buf[32];   
     int N = 1000;
     for (int i = 1; i <= N; ++i) {
 
