@@ -4,6 +4,7 @@
 #include <string.h>
 #include <math.h>
 #include "includes.h"
+#include "net_client.h"
 
 bool power_of_two(int n){
     if(n<=0)
@@ -62,9 +63,8 @@ int check_parity(int m) {
 
 
 
-int main(int argc, char *argv[]){
+int main(void){
     printf("###Hamming code encryption###\n");
-
    
     char* message = request_message();
     if (message == NULL){
@@ -78,6 +78,26 @@ int main(int argc, char *argv[]){
     printf("Hamming encoding: %s\t", hamming_message);
     add_noise(hamming_message);
     printf("Hamming with errors: %s\t");
+
+    if (net_client_init() != 0) {
+        fprintf(stderr, "Failed to init Winsock\n");
+        return 1;
+    }
+
+    net_client_t cli;
+    net_client_make(&cli, "127.0.0.1", 5050);
+
+    if (net_client_connect(&cli) != 0) {
+        fprintf(stderr, "Failed to connect\n");
+        net_client_cleanup();
+        return 1;
+    }
+
+    // close
+    net_client_send_line(&cli, hamming_message);
+    net_client_close(&cli);
+    net_client_cleanup();
+
 
     free(message); // free message memory
     free(hamming_message); // free hamming_code memory

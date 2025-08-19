@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "includes.h"
+#include "net_client.h"
 
 inline static void xor_at(char *buf, size_t pos, const char *poly, size_t size_poly) {
     for (size_t j = 0; j < size_poly; ++j) 
@@ -49,7 +50,7 @@ char* crc32(const char *message, size_t message_len){
 }
 
 
-int main(){
+int main(void){
     printf("###CRC-32 encryption###\n");
     char *message = request_message();
     size_t real_length = strlen(message); // get real size
@@ -57,6 +58,30 @@ int main(){
     printf("CRC32 encoded: %s\t", final_message);
     add_noise(final_message);
     printf("CRC32 with errors: %s\t", final_message);
+
+    if (net_client_init() != 0) {
+        fprintf(stderr, "Failed to init Winsock\n");
+        return 1;
+    }
+
+
+    net_client_t cli;
+    net_client_make(&cli, "127.0.0.1", 5050);
+
+
+    if (net_client_connect(&cli) != 0) {
+        fprintf(stderr, "Failed to connect\n");
+        net_client_cleanup();
+        return 1;
+    }
+
+    net_client_send_line(&cli, final_message);          
+
+
+
+    net_client_close(&cli);
+    net_client_cleanup();
+
     
     free(message);
     free(final_message);
